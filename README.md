@@ -8,7 +8,7 @@ Forma parte de **RASTRO — Kit de Investigación de Fuentes Abiertas**, creado 
 
 > **Proyecto independiente.** No está afiliado, patrocinado ni aprobado por PayPal. PayPal y PayPal.Me son marcas de sus respectivos titulares.
 >
-> Puede descargar el archivo .zip para la instalación y uso de la extensión en el apartado releases: https://github.com/S3GAD3/rastro-paypal/releases/tag/v0.3.0
+> Puede descargar el archivo .zip para la instalación y uso de la extensión en el apartado releases: https://github.com/S3GAD3/rastro-paypal/releases/
 
 ## Objetivo
 
