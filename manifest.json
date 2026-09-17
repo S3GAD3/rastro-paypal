@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "RASTRO PayPal Resolver",
+  "version": "0.3.0",
+  "description": "Pivote y captura controlada de información visible en PayPal y PayPal.Me para investigación OSINT.",
+  "icons": {
+    "16": "assets/icon-16.png",
+    "48": "assets/icon-48.png",
+    "128": "assets/icon-128.png"
+  },
+  "permissions": ["activeTab", "scripting", "storage", "downloads", "tabs"],
+  "host_permissions": [
+    "https://*.paypal.com/*",
+    "https://paypal.com/*",
+    "https://www.paypal.me/*",
+    "https://paypal.me/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Abrir consola RASTRO PayPal",
+    "default_icon": {
+      "16": "assets/icon-16.png",
+      "48": "assets/icon-48.png",
+      "128": "assets/icon-128.png"
+    }
+  }
+}

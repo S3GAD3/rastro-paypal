@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>RASTRO PayPal — Consola investigativa</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand" aria-label="RASTRO">
+      <img class="rastro-logo-img" src="assets/rastro-logo.jpg" alt="RASTRO · Kit de Investigación de Fuentes Abiertas">
+      <div><strong>RASTRO</strong><small>PAYPAL · CONSOLA INVESTIGATIVA · v0.3.0</small></div>
+    </div>
+    <span class="status-dot" title="Procesamiento local"></span>
+  </header>
+
+  <main>
+    <section class="notice">
+      <strong>Captura controlada</strong>
+      <span>Solo analiza información ya visible en la pestaña de PayPal seleccionada. No enumera cuentas ni consulta endpoints internos.</span>
+    </section>
+
+    <div class="console-grid">
+      <div class="control-column">
+
+    <section class="panel">
+      <h1>1. Preparar el pivote</h1>
+      <label for="inputType">Tipo de identificador</label>
+      <select id="inputType">
+        <option value="username">Nombre de usuario</option>
+        <option value="email">Correo electrónico</option>
+        <option value="phone">Número de teléfono</option>
+      </select>
+      <label for="target">Dato objetivo</label>
+      <div class="input-row">
+        <input id="target" type="text" autocomplete="off" spellcheck="false" placeholder="usuario">
+        <button id="copyTarget" class="icon-button" title="Copiar dato" aria-label="Copiar dato">⧉</button>
+      </div>
+      <p id="validation" class="validation" role="status"></p>
+      <div class="button-grid">
+        <button id="openPublic" class="primary">Abrir PayPal.Me</button>
+        <button id="openManual" class="secondary">Abrir búsqueda manual</button>
+      </div>
+      <p id="flowHint" class="hint">Abre el perfil público construido a partir del username y comprueba visualmente que corresponde al objetivo.</p>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <h1>2. Fuente PayPal</h1>
+        <span id="sourceBadge" class="badge neutral">SIN PESTAÑA</span>
+      </div>
+      <label for="sourceTabSelect">Pestaña que se analizará</label>
+      <select id="sourceTabSelect"></select>
+      <p id="sourceUrl" class="source-url">Abre PayPal o PayPal.Me para seleccionar una fuente.</p>
+      <div class="button-grid">
+        <button id="refreshTabs" class="secondary">Actualizar pestañas</button>
+        <button id="focusSource" class="secondary">Volver a PayPal</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <h1>3. Capturar pestaña</h1>
+        <span id="pageBadge" class="badge neutral">SIN COMPROBAR</span>
+      </div>
+      <button id="capture" class="capture">Analizar lo visible en PayPal</button>
+      <p id="captureMessage" class="hint">Sitúate en una página de PayPal o PayPal.Me donde se muestre el destinatario.</p>
+    </section>
+
+      </div>
+      <div class="result-column">
+
+    <section id="emptyResult" class="panel result-placeholder">
+      <strong>Informe de identidad PayPal</strong>
+      <p>Selecciona una pestaña de PayPal y ejecuta el análisis. El resultado permanecerá abierto en esta consola mientras continúas investigando.</p>
+    </section>
+
+    <section id="resultPanel" class="panel hidden">
+      <div class="section-head">
+        <h1>Resultado editable</h1>
+        <span id="resultStatus" class="badge"></span>
+      </div>
+      <div class="field-grid">
+        <label>Nombre visible<input id="resultName" type="text"></label>
+        <label>Username<input id="resultUsername" type="text"></label>
+        <label>Localidad / pista<input id="resultLocation" type="text"></label>
+        <label>Tipo de perfil<input id="resultProfileType" type="text"></label>
+      </div>
+      <label>URL de imagen visible<input id="resultImage" type="url"></label>
+      <div id="photoPanel" class="photo-panel hidden">
+        <button id="photoPreviewButton" class="photo-preview" title="Ver fotografía ampliada">
+          <img id="photoThumb" alt="Fotografía visible del perfil" referrerpolicy="no-referrer">
+        </button>
+        <div class="photo-actions">
+          <strong>Fotografía localizada</strong>
+          <span id="photoMessage">Pulsa la imagen para ampliarla.</span>
+          <div class="button-grid three">
+            <button id="viewPhoto" class="secondary">Ver en grande</button>
+            <button id="downloadPhoto" class="secondary">Descargar</button>
+            <button id="copyPhotoUrl" class="secondary">Copiar URL</button>
+          </div>
+        </div>
+      </div>
+      <label>Notas del investigador<textarea id="resultNotes" rows="3" placeholder="Correlaciones, advertencias o comprobaciones pendientes"></textarea></label>
+      <div class="pivot-panel">
+        <strong>Pivotes de identidad</strong>
+        <p>Abren búsquedas nuevas; no implican que los resultados pertenezcan a la misma persona.</p>
+        <div class="button-grid pivots">
+          <button id="pivotName" class="secondary">Google · nombre exacto</button>
+          <button id="pivotUsername" class="secondary">Google · username</button>
+          <button id="pivotGithub" class="secondary">GitHub · username</button>
+          <button id="copyIdentity" class="secondary">Copiar identidad</button>
+        </div>
+      </div>
+      <details>
+        <summary>Evidencia técnica capturada</summary>
+        <pre id="evidence"></pre>
+      </details>
+      <div class="button-grid three">
+        <button id="saveResult" class="primary">Guardar</button>
+        <button id="exportTxt" class="secondary">TXT</button>
+        <button id="exportHtml" class="secondary">HTML</button>
+      </div>
+    </section>
+
+    <section class="panel compact">
+      <div class="section-head">
+        <h1>Historial local</h1>
+        <button id="clearHistory" class="link-button">Borrar</button>
+      </div>
+      <div id="history" class="history"><p class="empty">Sin capturas guardadas.</p></div>
+    </section>
+      </div>
+    </div>
+  </main>
+
+  <div id="photoModal" class="photo-modal hidden" role="dialog" aria-modal="true" aria-label="Fotografía ampliada">
+    <div class="photo-dialog">
+      <div class="photo-dialog-head">
+        <strong>Fotografía visible en PayPal</strong>
+        <button id="closePhoto" class="modal-close" aria-label="Cerrar">×</button>
+      </div>
+      <div class="photo-dialog-body">
+        <img id="photoLarge" alt="Fotografía ampliada" referrerpolicy="no-referrer">
+        <p id="photoLargeError" class="photo-error hidden">La imagen no puede mostrarse directamente. Prueba a abrirla en una pestaña nueva.</p>
+      </div>
+      <div class="photo-dialog-actions">
+        <button id="openPhotoTab" class="secondary">Abrir en pestaña</button>
+        <button id="downloadPhotoModal" class="primary">Descargar fotografía</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>Creado por S3GAD3 · Los resultados son indicios y requieren corroboración.</footer>
+  <script src="popup.js"></script>
+</body>
+</html>
