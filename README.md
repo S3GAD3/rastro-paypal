@@ -1,194 +1,95 @@
-# RASTRO PayPal Resolver
+# RASTRO PayPal Resolver v0.4.0
 
-Extensión experimental de navegador para apoyar investigaciones OSINT sobre perfiles públicos de PayPal.Me y destinatarios mostrados legítimamente por PayPal.
+![RASTRO PayPal Resolver](assets/rastro-paypal-logo.png)
+
+Consola OSINT para navegador (Chrome, Edge, Brave, Opera) que resuelve **perfiles públicos de PayPal.Me** a partir de un username, un correo o un teléfono, y documenta cada actuación con **cadena de custodia** (hash SHA-256, registro con hora UTC, informe imprimible).
 
 Forma parte de **RASTRO — Kit de Investigación de Fuentes Abiertas**, creado por **S3GAD3**.
-
-![Logotipo oficial de RASTRO](assets/rastro-logo.jpg)
 
 > **Proyecto independiente.** No está afiliado, patrocinado ni aprobado por PayPal. PayPal y PayPal.Me son marcas de sus respectivos titulares.
 >
 > Puede descargar el archivo .zip para la instalación y uso de la extensión en el apartado releases: https://github.com/S3GAD3/rastro-paypal/releases/
 
-## Objetivo
+## Qué obtiene y cómo
 
-RASTRO PayPal Resolver permite:
+| Entrada | Sin cuenta PayPal | Con cuenta de trabajo |
+|---|---|---|
+| **Username** | Consulta HTTP directa a `paypal.com/paypalme/<alias>` y extracción de los datos que la propia página pública incrusta: nombre, nombre y apellidos, fotografía, localidad, país, verificación, tipo de cuenta, ID interno (payer/merchant), divisa. Prueba variantes del alias. | — |
+| **Email** | Gravatar por hash SHA-256 (nombre, foto, localidad, cuentas vinculadas). Alias derivados del correo (`juan.perez88@…` → `juanperez88`, `juanperez`, `jperez`…) comprobados en PayPal.Me. Los alias que aporte Gravatar se encolan automáticamente. | Captura asistida del buscador de destinatarios. |
+| **Teléfono** | Normalización E.164, formatos para búsqueda, pivotes (Google, WhatsApp, Telegram) y, opcionalmente, el número como alias PayPal.Me. | Captura asistida del buscador de destinatarios. |
+| **Lote** | Hasta 25 identificadores mezclados; el tipo se detecta solo. | — |
 
-- construir y abrir un perfil `paypal.me/username`;
-- preparar búsquedas manuales por correo electrónico o teléfono;
-- seleccionar una pestaña de PayPal abierta en el navegador;
-- capturar únicamente la información que PayPal ya muestra en pantalla;
-- extraer nombre, username, localidad, tipo de perfil y posible fotografía;
-- revisar los campos antes de conservarlos;
-- pivotar sobre el nombre y el username;
-- exportar el resultado a TXT o HTML.
+Si PayPal responde con un reto de seguridad o sin datos embebidos, la herramienta **reintenta en una pestaña en segundo plano** y extrae el contenido ya renderizado. Si aparece un captcha, la pestaña se entrega al investigador para que lo resuelva; la herramienta no intenta eludirlo.
 
-No es un enumerador de cuentas y no utiliza APIs privadas de PayPal.
+### Lo que no hace (deliberadamente)
 
-## Funcionamiento
+PayPal no ofrece ninguna vía pública para saber a quién pertenece un correo o un teléfono. Las únicas formas de obtenerlo sin sesión pasarían por abusar de los formularios de registro, inicio de sesión o recuperación de contraseña, lo que vulnera las condiciones del servicio, puede bloquear la IP del organismo y compromete la validez de la prueba. Por eso esas resoluciones se hacen por pivotes (Gravatar, alias derivados) o mediante la **captura asistida** con una cuenta de trabajo.
 
-Al pulsar el icono se abre una consola investigativa en una pestaña completa. Si ya existe, se recupera esa misma pestaña.
+## Uso
 
-1. Introduce un username, correo o teléfono.
-2. Abre PayPal.Me o el buscador legítimo de destinatarios.
-3. Regresa a la consola pulsando otra vez el icono.
-4. Selecciona la pestaña de PayPal que contiene el resultado.
-5. Pulsa **Analizar lo visible en PayPal**.
-6. Revisa los campos antes de guardar o exportar.
+1. Pulsa el icono de RASTRO: se abre la consola en una pestaña completa.
+2. Rellena **Expediente** e **Investigador/TIP** (aparecen en el informe).
+3. Elige pestaña (Username / Email / Teléfono / Lote), introduce el dato y pulsa **Ejecutar resolución** (o `Ctrl+Enter`).
+4. Revisa las **fichas**: sello POSITIVO / REVISIÓN / NEGATIVO / BLOQUEADO, confianza 0-100, campos con botón de copia, fotografía ampliable, pivotes de identidad y evidencia técnica.
+5. Exporta: **Informe policial** (HTML imprimible/PDF con fotografías incrustadas y fichero `.sha256` adjunto), JSON, CSV (Excel) o TXT. Los ficheros se guardan en `Descargas/RASTRO-PayPal/<expediente>/`.
 
-El analizador se ejecuta exclusivamente cuando el usuario pulsa el botón de captura.
+### Captura asistida (correo/teléfono con cuenta)
 
-## Métodos de entrada
+1. Panel 02 → **Abrir buscador PayPal**: el identificador se copia al portapapeles.
+2. Pégalo en PayPal y espera a que aparezca el destinatario.
+3. Vuelve a la consola → **Analizar pestaña**. Solo se usa lo visible en pantalla, nunca el estado interno de la página (que contiene datos de la propia cuenta del investigador).
+4. **Captura pantalla** adjunta una imagen de la fuente, con su hash, a la ficha correspondiente. Si Chrome la deniega, pulsa el icono de RASTRO estando en esa pestaña y repite.
 
-### Username
+## Estados
 
-Construye el enlace público:
+- **POSITIVO**: se obtuvo nombre (o foto con alias coincidente).
+- **REVISIÓN**: la página respondió, pero sin datos suficientes; compruébalo manualmente.
+- **NEGATIVO**: PayPal indica que el perfil no existe o redirige fuera del alias. Formulación correcta: *sin perfil PayPal públicamente localizable mediante este identificador en el momento de la comprobación*.
+- **BLOQUEADO**: reto de seguridad o límite de peticiones.
 
-```text
-https://www.paypal.me/username
-```
+## Cadena de custodia
 
-La coincidencia del username es solo un indicio. Debe contrastarse con el nombre, la fotografía, la localidad y otras fuentes independientes.
-
-### Correo electrónico
-
-El correo se copia al portapapeles y se abre el flujo de destinatarios de PayPal para realizar una comprobación manual.
-
-La ausencia de resultado no demuestra que la cuenta no exista. Puede deberse a la configuración de privacidad, al país, al tipo de cuenta o a cambios de la plataforma.
-
-### Teléfono
-
-Funciona como búsqueda asistida. Conviene normalizar previamente el número con su prefijo internacional.
-
-## Datos que puede detectar
-
-- nombre mostrado;
-- username;
-- localidad o pista geográfica visible;
-- tipo de perfil;
-- URL de la posible fotografía;
-- URL y título de la página fuente;
-- fecha y hora de captura;
-- metadatos técnicos visibles.
-
-La detección de fotografías puntúa los elementos visibles para priorizar avatares cuadrados o circulares y descartar logotipos, iconos y cabeceras.
-
-## Estados metodológicos
-
-- **LOCALIZADO:** se detectaron señales visibles compatibles con un perfil.
-- **NO LOCALIZADO PÚBLICAMENTE:** PayPal muestra expresamente una señal de perfil público no encontrado.
-- **REVISIÓN MANUAL:** no existe evidencia suficiente o la interfaz no coincide con los selectores conocidos.
-
-La aplicación no debe utilizarse para afirmar que una persona “no tiene PayPal”. La formulación correcta es:
-
-> Sin perfil PayPal públicamente localizable mediante este identificador en el momento de la comprobación.
+- SHA-256 del HTML/JSON de cada fuente, de cada fotografía y de cada captura de pantalla.
+- Copia local de la fotografía (no depende de que la URL siga viva).
+- Registro de actuaciones con hora UTC, incluido en el informe.
+- Hash del informe en un fichero `.sha256` independiente.
 
 ## Instalación
 
-### Chrome
-
-1. Descarga o clona el repositorio.
-2. Abre `chrome://extensions`.
-3. Activa **Modo desarrollador**.
-4. Pulsa **Cargar descomprimida**.
-5. Selecciona la carpeta del proyecto.
-6. Fija la extensión a la barra del navegador.
-
-### Brave y Opera
-
-Utiliza el mismo procedimiento desde `brave://extensions` u `opera://extensions`.
+1. `chrome://extensions` (o `edge://`, `brave://`, `opera://`).
+2. Activa **Modo desarrollador** → **Cargar descomprimida** → selecciona esta carpeta.
+3. Fija el icono en la barra.
 
 ## Permisos
 
 | Permiso | Finalidad |
 |---|---|
-| `activeTab` | Asociar la pestaña desde la que se activa la extensión. |
-| `scripting` | Ejecutar el extractor bajo demanda en la pestaña PayPal seleccionada. |
-| `storage` | Conservar localmente la configuración y hasta 50 resultados. |
-| `downloads` | Exportar informes y descargar la fotografía cuando sea posible. |
-| `tabs` | Abrir la consola, seleccionar pestañas PayPal y realizar pivotes. |
-| Dominios PayPal | Limitar la captura a páginas de PayPal y PayPal.Me. |
+| `tabs`, `activeTab`, `scripting` | Abrir la consola, pestañas en segundo plano y extraer lo visible en PayPal. |
+| `storage`, `unlimitedStorage` | Sesión actual e historial (hasta 30 sesiones) en el propio navegador. |
+| `downloads` | Informes, exportaciones y fotografías. |
+| Dominios PayPal / paypalobjects | Consultar PayPal.Me y copiar fotografías de perfil. |
+| Gravatar | Consulta pública por hash del correo. |
 
-La extensión no solicita acceso general a todos los sitios web.
-
-## Privacidad
-
-- No existe backend.
-- No hay telemetría ni analítica.
-- No se transmiten resultados al autor.
-- No se incluyen credenciales ni tokens.
-- El historial permanece en `chrome.storage.local`.
-- Las exportaciones se generan en el navegador.
-
-Consulta [PRIVACY.md](PRIVACY.md).
-
-## Exportaciones
-
-### TXT
-
-Incluye campos normalizados, fuente, fecha, notas y evidencia técnica.
-
-### HTML
-
-Genera un informe visual con la fotografía referenciada cuando la URL continúa disponible. Algunas imágenes pueden ser temporales o requerir una sesión válida.
-
-## Pivotes
-
-- Google: nombre exacto.
-- Google: username y variante `@username`.
-- GitHub: perfil construido desde el username.
-- Copia conjunta de nombre, username, localidad y fuente.
-
-Los pivotes abren nuevas búsquedas; no confirman que los resultados pertenezcan a la misma persona.
-
-## Limitaciones
-
-- PayPal puede modificar su interfaz sin previo aviso.
-- El resultado puede variar según idioma, país, sesión y tipo de cuenta.
-- Las búsquedas por correo o teléfono requieren interacción manual.
-- Una fotografía puede estar protegida, ser temporal o no estar disponible.
-- El mismo username puede pertenecer a personas diferentes.
-- La información extraída debe tratarse conforme a la normativa aplicable.
-
-## Uso responsable
-
-Utiliza la herramienta únicamente en investigaciones legítimas y autorizadas, respetando los principios de necesidad, proporcionalidad, minimización y corroboración.
-
-No utilices el proyecto para acoso, vigilancia no autorizada, campañas masivas, suplantación, fraude o acceso indebido a cuentas.
+No se solicita acceso a otros sitios web.
 
 ## Estructura
 
 ```text
-assets/          Logotipo e iconos locales
-background.js    Apertura y recuperación de la consola
-console.html     Interfaz investigativa
-popup.css        Sistema visual
-popup.js         Captura, normalización, pivotes y exportación
-manifest.json    Configuración Manifest V3
-PRIVACY.md       Política de privacidad
-SECURITY.md      Comunicación responsable de vulnerabilidades
-CHANGELOG.md     Historial de versiones
-LICENSE          Licencia MIT
+assets/          Logotipo, emblema e iconos
+background.js    Apertura/recuperación de la consola
+console.html     Interfaz
+console.css      Estilo (tema azul policial)
+js/util.js       Utilidades, normalización, candidatos, limitador de ritmo
+js/parser.js     Analizador de páginas PayPal.Me
+js/resolvers.js  PayPal.Me (HTTP y pestaña), captura asistida, Gravatar, fotos, capturas
+js/report.js     Informe policial, TXT, JSON, CSV
+js/app.js        Controlador de la consola
 ```
 
-## Desarrollo
+## Uso responsable
 
-HTML, CSS y JavaScript sin dependencias externas ni proceso de compilación.
-
-```bash
-node --check popup.js
-node --check background.js
-python3 -m json.tool manifest.json
-```
-
-## Contribuciones
-
-Las mejoras son bienvenidas. Al abrir una incidencia no adjuntes nombres, fotografías, correos, teléfonos, cookies, credenciales ni capturas de personas investigadas. Utiliza perfiles propios o datos ficticios.
+Utilízala solo en investigaciones legítimas y autorizadas, respetando necesidad, proporcionalidad, minimización y corroboración (RGPD / LO 7/2021). No la uses para acoso, vigilancia no autorizada, campañas masivas ni acceso indebido a cuentas.
 
 ## Licencia
 
-Distribuido bajo licencia [MIT](LICENSE). Puedes utilizar, modificar y crear forks conservando el aviso de copyright y la atribución a **S3GAD3**.
-
-## Autor
-
-**S3GAD3** — Proyecto RASTRO.
+MIT — © S3GAD3.
