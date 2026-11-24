@@ -1,19 +1,23 @@
 {
   "manifest_version": 3,
   "name": "RASTRO PayPal Resolver",
-  "version": "0.3.0",
-  "description": "Pivote y captura controlada de información visible en PayPal y PayPal.Me para investigación OSINT.",
+  "version": "0.4.0",
+  "description": "Consola OSINT para resolver perfiles públicos de PayPal.Me a partir de username, correo o teléfono, con cadena de custodia.",
   "icons": {
     "16": "assets/icon-16.png",
+    "32": "assets/icon-32.png",
     "48": "assets/icon-48.png",
     "128": "assets/icon-128.png"
   },
-  "permissions": ["activeTab", "scripting", "storage", "downloads", "tabs"],
+  "permissions": ["activeTab", "scripting", "storage", "unlimitedStorage", "downloads", "tabs"],
   "host_permissions": [
     "https://*.paypal.com/*",
     "https://paypal.com/*",
     "https://www.paypal.me/*",
-    "https://paypal.me/*"
+    "https://paypal.me/*",
+    "https://*.paypalobjects.com/*",
+    "https://gravatar.com/*",
+    "https://*.gravatar.com/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -22,8 +26,12 @@
     "default_title": "Abrir consola RASTRO PayPal",
     "default_icon": {
       "16": "assets/icon-16.png",
+      "32": "assets/icon-32.png",
       "48": "assets/icon-48.png",
       "128": "assets/icon-128.png"
     }
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
   }
 }
